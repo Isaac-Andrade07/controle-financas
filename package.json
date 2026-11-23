@@ -1,0 +1,11 @@
+{
+  "name": "controle-financas",
+  "version": "1.0.0",
+  "description": "Controle de finanças pessoais com back-end em Python e front-end em JavaScript",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "start": "python backend/servidor.py"
+  },
+  "author": "Isaac Raphael Oliveira Andrade"
+}
