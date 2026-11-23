@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Controle de finanças pessoais com receitas, despesas, metas e relatórios">
+  <title>Controle de Finanças</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%23059669%22/%3E%3Ctext x=%2216%22 y=%2222%22 font-size=%2216%22 font-family=%22sans-serif%22 font-weight=%22bold%22 fill=%22white%22 text-anchor=%22middle%22%3ER$%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    try { document.documentElement.dataset.tema = localStorage.getItem("financas-tema") || "claro"; } catch {}
+  </script>
+</head>
+<body>
+  <header class="topo">
+    <div class="marca"><span class="logo">R$</span><strong>Minhas Finanças</strong></div>
+    <nav class="abas" aria-label="Seções">
+      <a href="#/visao" data-rota="visao">Visão geral</a>
+      <a href="#/transacoes" data-rota="transacoes">Transações</a>
+      <a href="#/metas" data-rota="metas">Metas</a>
+      <a href="#/categorias" data-rota="categorias">Categorias</a>
+    </nav>
+    <div class="acoes-topo">
+      <input type="month" id="mes" aria-label="Mês de referência">
+      <button class="btn" id="btnNova">+ Transação</button>
+      <button class="btn sec icone" id="btnTema" aria-label="Alternar tema">🌙</button>
+    </div>
+  </header>
+
+  <div class="faixa" id="faixaModo" hidden>
+    <span id="textoModo"></span>
+    <span class="faixa-acoes">
+      <button class="link" id="btnExemplo">Carregar dados de exemplo</button>
+      <button class="link" id="btnLimparDemo">Apagar dados</button>
+    </span>
+  </div>
+
+  <main>
+    <!-- VISÃO GERAL -->
+    <section data-view="visao">
+      <h1 id="tituloMes">Visão geral</h1>
+      <div class="kpis" id="kpis"></div>
+      <div class="grade">
+        <article class="card largo">
+          <div class="cab-card">
+            <h2>Receitas x despesas</h2>
+            <span class="legenda-mini"><i class="verde"></i>Receitas <i class="vermelho"></i>Despesas</span>
+          </div>
+          <canvas id="grafEvolucao"></canvas>
+        </article>
+        <article class="card">
+          <h2>Para onde foi o dinheiro</h2>
+          <canvas id="grafCategorias"></canvas>
+          <ul class="legenda" id="legendaCategorias"></ul>
+        </article>
+        <article class="card">
+          <div class="cab-card"><h2>Últimas transações</h2><a href="#/transacoes" class="link">Ver todas</a></div>
+          <ul class="lista-simples" id="ultimas"></ul>
+        </article>
+        <article class="card">
+          <div class="cab-card"><h2>Metas</h2><a href="#/metas" class="link">Gerenciar</a></div>
+          <div id="resumoMetas"></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- TRANSAÇÕES -->
+    <section data-view="transacoes" hidden>
+      <div class="barra">
+        <h1>Transações</h1>
+        <div class="filtros">
+          <input type="search" id="fBusca" placeholder="Buscar descrição">
+          <select id="fTipo">
+            <option value="">Receitas e despesas</option>
+            <option value="receita">Só receitas</option>
+            <option value="despesa">Só despesas</option>
+          </select>
+          <select id="fCategoria"><option value="">Todas as categorias</option></select>
+          <button class="btn sec" id="btnCsv">Exportar CSV</button>
+        </div>
+      </div>
+      <div class="card sem-padding">
+        <table>
+          <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th class="direita">Valor</th><th></th></tr></thead>
+          <tbody id="tabela"></tbody>
+          <tfoot><tr><td colspan="3">Total do filtro</td><td class="direita" id="totalFiltro"></td><td></td></tr></tfoot>
+        </table>
+        <p class="vazio" id="tabelaVazia" hidden>Nenhuma transação neste mês com esses filtros.</p>
+      </div>
+    </section>
+
+    <!-- METAS -->
+    <section data-view="metas" hidden>
+      <h1>Metas</h1>
+      <div class="grade-lateral">
+        <form class="card formulario" id="formMeta">
+          <h2>Nova meta</h2>
+          <label>Nome<input name="nome" maxlength="50" placeholder="Ex.: Entrada do carro" required></label>
+          <label>Valor da meta (R$)<input name="alvo" inputmode="decimal" placeholder="20.000,00" required></label>
+          <label>Prazo (opcional)<input name="prazo" type="date"></label>
+          <button class="btn">Criar meta</button>
+        </form>
+        <div class="lista-metas" id="listaMetas"></div>
+      </div>
+    </section>
+
+    <!-- CATEGORIAS -->
+    <section data-view="categorias" hidden>
+      <h1>Categorias</h1>
+      <div class="grade-lateral">
+        <form class="card formulario" id="formCategoria">
+          <h2>Nova categoria</h2>
+          <label>Nome<input name="nome" maxlength="30" required></label>
+          <label>Tipo
+            <select name="tipo"><option value="despesa">Despesa</option><option value="receita">Receita</option></select>
+          </label>
+          <label>Cor<input name="cor" type="color" value="#0ea5e9"></label>
+          <button class="btn">Adicionar</button>
+        </form>
+        <div class="card">
+          <h2>Receitas</h2>
+          <ul class="chips" id="catReceitas"></ul>
+          <h2>Despesas</h2>
+          <ul class="chips" id="catDespesas"></ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal de transação -->
+  <dialog id="modalTransacao">
+    <form id="formTransacao" novalidate>
+      <header><h2 id="tituloTransacao">Nova transação</h2><button type="button" class="fechar" data-fechar aria-label="Fechar">×</button></header>
+      <div class="corpo-modal">
+        <div class="seletor-tipo" role="radiogroup" aria-label="Tipo">
+          <label><input type="radio" name="tipo" value="despesa" checked><span>Despesa</span></label>
+          <label><input type="radio" name="tipo" value="receita"><span>Receita</span></label>
+        </div>
+        <label>Descrição<input name="descricao" maxlength="80" placeholder="Ex.: Mercado"></label>
+        <div class="duas">
+          <label>Valor (R$)<input name="valor" inputmode="decimal" placeholder="0,00"></label>
+          <label>Data<input name="data" type="date"></label>
+        </div>
+        <label>Categoria<select name="categoria_id"></select></label>
+        <p class="erro" id="erroTransacao"></p>
+      </div>
+      <footer>
+        <button type="button" class="btn sec perigo" id="btnExcluirTransacao" hidden>Excluir</button>
+        <span class="espaco"></span>
+        <button type="button" class="btn sec" data-fechar>Cancelar</button>
+        <button class="btn">Salvar</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+  <footer class="rodape">Feito por Isaac Raphael · Python (back-end) + JavaScript (front-end)</footer>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
